@@ -1,0 +1,1828 @@
+Coverage Report by file with details
+
+File: Delay.v
+Statement Coverage:
+    Enabled Coverage        Active      Hits % Covered
+    ----------------        ------      ---- ---------
+    Stmts                       13        12      92.3
+
+================================Statement Details================================
+
+Statement Coverage for file Delay.v --
+
+    1                                              `timescale 1ns / 1ps
+    2                                              //////////////////////////////////////////////////////////////////////////////////
+    3                                              // Company: Digilent Inc.
+    4                                              // Engineers: Ryan Kim
+    5                                              //				  Josh Sackos
+    6                                              // 
+    7                                              // Create Date:    13:43:40 06/13/2012 
+    8                                              // Module Name:    Delay - Behavioral 
+    9                                              // Project Name:   PmodOled Demo
+    10                                             // Tool versions:  ISE 14.1
+    11                                             // Description:    Creates a delay of DELAY_MS ms
+    12                                             //
+    13                                             // Revision: 1.0
+    14                                             // Revision 0.01 - File Created
+    15                                             //
+    16                                             //////////////////////////////////////////////////////////////////////////////////
+    17                                             module Delay(
+    18                                                 CLK,
+    19                                                 RST,
+    20                                                 DELAY_MS,
+    21                                                 DELAY_EN,
+    22                                                 DELAY_FIN
+    23                                                 );
+    24                                             
+    25                                             	// ===========================================================================
+    26                                             	// 										Port Declarations
+    27                                             	// ===========================================================================
+    28                                                 input CLK;
+    29                                                 input RST;
+    30                                                 input [11:0] DELAY_MS;
+    31                                                 input DELAY_EN;
+    32                                                 output DELAY_FIN;
+    33                                             
+    34                                             	// ===========================================================================
+    35                                             	// 							  Parameters, Regsiters, and Wires
+    36                                             	// ===========================================================================
+    37                                             	wire DELAY_FIN;
+    38                                             
+    39                                             	reg [31:0] current_state = "Idle";						// Signal for state machine
+    40                                             	reg [16:0] clk_counter = 17'b00000000000000000;		// Counts up on every rising edge of CLK
+    41                                             	reg [11:0] ms_counter = 12'h000;							// Counts up when clk_counter = 100,000
+    42                                             
+    43                                             
+    44                                             	// ===========================================================================
+    45                                             	// 										Implementation
+    46                                             	// ===========================================================================
+    47                            1         34     	assign DELAY_FIN = (current_state == "Done" && DELAY_EN == 1'b1) ? 1'b1 : 1'b0;
+    48                                             	
+    49                                             	//  State Machine
+    50                            1    2000000     	always @(posedge CLK) begin
+    51                                             			// When RST is asserted switch to idle (synchronous)
+    52                                             			if(RST == 1'b1) begin
+    53                            1          8     					current_state <= "Idle";
+    54                                             			end
+    55                                             			else begin
+    56                                             					case(current_state)
+    57                                             
+    58                                             							"Idle" : begin
+    59                                             									// Start delay on DELAY_EN
+    60                                             									if(DELAY_EN == 1'b1) begin
+    61                            1          6     											current_state <= "Hold";
+    62                                             									end
+    63                                             							end
+    64                                             							
+    65                                             							"Hold" : begin
+    66                                             									// Stay until DELAY_MS has occured
+    67                                             									if(ms_counter == DELAY_MS) begin
+    68                            1          6     											current_state <= "Done";
+    69                                             									end
+    70                                             							end
+    71                                             							
+    72                                             							"Done" : begin
+    73                                             									// Wait until DELAY_EN is deasserted to go to IDLE
+    74                                             									if(DELAY_EN == 1'b0) begin
+    75                            1          6     											current_state <= "Idle";
+    76                                             									end
+    77                                             							end
+    78                                             							
+    79                            1    ***0***     							default : current_state <= "Idle";
+    80                                             							
+    81                                             					endcase
+    82                                             			end
+    83                                             	end
+    84                                             	//  End State Machine
+    85                                             
+    86                                             
+    87                                             	// Creates ms_counter that counts at 1KHz
+    88                                             	// CLK_DIV
+    89                            1    2000000     	always @(posedge CLK) begin
+    90                                             			if(current_state == "Hold") begin			
+    91                                             					// if(clk_counter == 17'b11000011010100000) begin		// 100,000
+    92                                             					if(clk_counter == 17'b00000000001100100) begin	    // changed to 100 to speed up simulation
+    93                            1       5103     							clk_counter <= 17'b00000000000000000;
+    94                            1       5103     							ms_counter <= ms_counter + 1'b1;					// increments at 1KHz
+    95                                             					end
+    96                                             					else begin
+    97                            1     510306     							clk_counter <= clk_counter + 1'b1;
+    98                                             					end
+    99                                             			end
+    100                                            			else begin																// If not in the hold state reset counters
+    101                           1    1484591     					clk_counter <= 17'b00000000000000000;
+    102                           1    1484591     					ms_counter <= 12'h000;
+    103                                            			end
+    104                                            	end
+    105                                            
+    106                                            endmodule
+
+Branch Coverage:
+    Enabled Coverage        Active      Hits % Covered
+    ----------------        ------      ---- ---------
+    Branches                    16        15      93.7
+
+================================Branch Details================================
+
+Branch Coverage for file Delay.v --
+
+------------------------------------IF Branch------------------------------------
+    52                                 2000000     Count coming in to IF
+    52                            1          8     			if(RST == 1'b1) begin
+    55                            1    1999992     			else begin
+Branch totals: 2 hits of 2 branches = 100.0%
+
+------------------------------------CASE Branch------------------------------------
+    56                                 1999992     Count coming in to CASE
+    58                            1    1484565     							"Idle" : begin
+    65                            1     515409     							"Hold" : begin
+    72                            1         18     							"Done" : begin
+    79                            1    ***0***     							default : current_state <= "Idle";
+Branch totals: 3 hits of 4 branches = 75.0%
+
+------------------------------------IF Branch------------------------------------
+    60                                 1484565     Count coming in to IF
+    60                            1          6     									if(DELAY_EN == 1'b1) begin
+                                       1484559     All False Count
+Branch totals: 2 hits of 2 branches = 100.0%
+
+------------------------------------IF Branch------------------------------------
+    67                                  515409     Count coming in to IF
+    67                            1          6     									if(ms_counter == DELAY_MS) begin
+                                        515403     All False Count
+Branch totals: 2 hits of 2 branches = 100.0%
+
+------------------------------------IF Branch------------------------------------
+    74                                      18     Count coming in to IF
+    74                            1          6     									if(DELAY_EN == 1'b0) begin
+                                            12     All False Count
+Branch totals: 2 hits of 2 branches = 100.0%
+
+------------------------------------IF Branch------------------------------------
+    90                                 2000000     Count coming in to IF
+    90                            1     515409     			if(current_state == "Hold") begin			
+    100                           1    1484591     			else begin																// If not in the hold state reset counters
+Branch totals: 2 hits of 2 branches = 100.0%
+
+------------------------------------IF Branch------------------------------------
+    92                                  515409     Count coming in to IF
+    92                            1       5103     					if(clk_counter == 17'b00000000001100100) begin	    // changed to 100 to speed up simulation
+    96                            1     510306     					else begin
+Branch totals: 2 hits of 2 branches = 100.0%
+
+
+Condition Coverage:
+    Enabled Coverage        Active      Hits % Covered
+    ----------------        ------      ---- ---------
+    Conditions                   0         0     100.0
+    Fec Conditions               0         0     100.0
+Expression Coverage:
+    Enabled Coverage        Active      Hits % Covered
+    ----------------        ------      ---- ---------
+    Expressions                  3         3     100.0
+    Fec Expressions              4         4     100.0
+
+================================Expression Details================================
+
+Expression Coverage for file Delay.v --
+
+------------------UDP Expression View (Short circuiting enabled)-------------------
+Line       47 Item    1 	assign DELAY_FIN = (current_state == "Done" && DELAY_EN == 1'b1) ? 1'b1 : 1'b0;
+Expression totals: 3 hits of 3 rows = 100.0%
+Truth Table:         (current_state == 1148153445)
+                     |DELAY_EN
+                hits ||((current_state == 1148153445) & (DELAY_EN == 1'b1))
+  Row   1:        22 0-0
+  Row   2:         6 -00
+  Row   3:         6 111
+  unknown:         0 
+
+----------------Focused Expression View (Short circuiting enabled)-----------------
+Line       47 Item    1 	assign DELAY_FIN = (current_state == "Done" && DELAY_EN == 1'b1) ? 1'b1 : 1'b0;
+Expression totals: 4 hits of 4 rows = 100.0%
+     Rows:      hits         Fec Targets       Matching input patterns
+  --------  --------      --------------        ----------------------
+  Row   1:        22 (current_state == 1148153445)_0                        { 0- }
+  Row   2:         6 (current_state == 1148153445)_1                        { 11 }
+  Row   3:         6          DELAY_EN_0                        { 10 }
+  Row   4:         6          DELAY_EN_1                        { 11 }
+
+
+
+File: OledEX.v
+Statement Coverage:
+    Enabled Coverage        Active      Hits % Covered
+    ----------------        ------      ---- ---------
+    Stmts                       97        97     100.0
+
+================================Statement Details================================
+
+Statement Coverage for file OledEX.v --
+
+    1                                              `timescale 1ns / 1ps
+    2                                              //////////////////////////////////////////////////////////////////////////////////
+    3                                              // Company: Digilent Inc.
+    4                                              // Engineers: Ryan Kim
+    5                                              //				  Josh Sackos
+    6                                              // 
+    7                                              // Create Date:    14:10:08 06/13/2012 
+    8                                              // Module Name:    OledExample - Behavioral 
+    9                                              // Project Name: 	 PmodOLED Demo
+    10                                             // Tool versions:  ISE 14.1
+    11                                             // Description: Demo for the PmodOLED.  First displays the alphabet for ~4 seconds and then
+    12                                             //				Clears the display, waits for a ~1 second and then displays "This is Digilent's
+    13                                             //				PmodOLED"
+    14                                             //
+    15                                             // Revision: 1.2
+    16                                             // Revision 0.01 - File Created
+    17                                             //
+    18                                             //////////////////////////////////////////////////////////////////////////////////
+    19                                             module OledEX(
+    20                                                 CLK,
+    21                                                 RST,
+    22                                                 EN,
+    23                                                 CS,
+    24                                                 SDO,
+    25                                                 SCLK,
+    26                                                 DC,
+    27                                                 FIN
+    28                                                 );
+    29                                             
+    30                                             	// ===========================================================================
+    31                                             	// 										Port Declarations
+    32                                             	// ===========================================================================
+    33                                                 input CLK;
+    34                                                 input RST;
+    35                                                 input EN;
+    36                                                 output CS;
+    37                                                 output SDO;
+    38                                                 output SCLK;
+    39                                                 output DC;
+    40                                                 output FIN;
+    41                                             
+    42                                             	// ===========================================================================
+    43                                             	// 							  Parameters, Regsiters, and Wires
+    44                                             	// ===========================================================================
+    45                                             	wire CS, SDO, SCLK, DC, FIN;
+    46                                             
+    47                                               //Variable that contains what the screen will be after the next UpdateScreen state
+    48                                               reg [7:0]       current_screen[0:3][0:15];
+    49                                               //Constant that contains the screen filled with the Alphabet and numbers
+    50                                               parameter [7:0] alphabet_screen[0:3][0:15] = '{'{8'h41, 8'h42, 8'h43, 8'h44, 8'h45, 8'h46, 8'h47, 8'h48, 8'h49, 8'h4A, 8'h4B, 8'h4C, 8'h4D, 8'h4E, 8'h4F, 8'h50}, {8'h51, 8'h52, 8'h53, 8'h54, 8'h55, 8'h56, 8'h57, 8'h58, 8'h59, 8'h5A, 8'h61, 8'h62, 8'h63, 8'h64, 8'h65, 8'h66}, {8'h67, 8'h68, 8'h69, 8'h6A, 8'h6B, 8'h6C, 8'h6D, 8'h6E, 8'h6F, 8'h70, 8'h71, 8'h72, 8'h73, 8'h74, 8'h75, 8'h76}, {8'h77, 8'h78, 8'h79, 8'h7A, 8'h30, 8'h31, 8'h32, 8'h33, 8'h34, 8'h35, 8'h36, 8'h37, 8'h38, 8'h39, 8'h7F, 8'h7F}};
+    51                                               //Constant that fills the screen with blank (spaces) entries
+    52                                               parameter [7:0] clear_screen[0:3][0:15] = '{'{8'h20, 8'h20, 8'h20, 8'h20, 8'h20, 8'h20, 8'h20, 8'h20, 8'h20, 8'h20, 8'h20, 8'h20, 8'h20, 8'h20, 8'h20, 8'h20}, {8'h20, 8'h20, 8'h20, 8'h20, 8'h20, 8'h20, 8'h20, 8'h20, 8'h20, 8'h20, 8'h20, 8'h20, 8'h20, 8'h20, 8'h20, 8'h20}, {8'h20, 8'h20, 8'h20, 8'h20, 8'h20, 8'h20, 8'h20, 8'h20, 8'h20, 8'h20, 8'h20, 8'h20, 8'h20, 8'h20, 8'h20, 8'h20}, {8'h20, 8'h20, 8'h20, 8'h20, 8'h20, 8'h20, 8'h20, 8'h20, 8'h20, 8'h20, 8'h20, 8'h20, 8'h20, 8'h20, 8'h20, 8'h20}};
+    53                                               //Constant that holds "This is" "Digilent's" "PmodOLED"
+    54                                               // parameter [7:0] digilent_screen[0:3][0:15] = {{8'h54, 8'h68, 8'h69, 8'h73, 8'h20, 8'h69, 8'h73, 8'h20, 8'h20, 8'h20, 8'h20, 8'h20, 8'h20, 8'h20, 8'h20, 8'h20}, {8'h44, 8'h69, 8'h67, 8'h69, 8'h6C, 8'h65, 8'h6E, 8'h74, 8'h27, 8'h73, 8'h20, 8'h20, 8'h20, 8'h20, 8'h20, 8'h20}, {8'h50, 8'h6D, 8'h6F, 8'h64, 8'h4F, 8'h4C, 8'h45, 8'h44, 8'h20, 8'h20, 8'h20, 8'h20, 8'h20, 8'h20, 8'h20, 8'h20}, {8'h20, 8'h20, 8'h20, 8'h20, 8'h20, 8'h20, 8'h20, 8'h20, 8'h20, 8'h20, 8'h20, 8'h20, 8'h20, 8'h20, 8'h20, 8'h20}};
+    55                                               
+    56                                               //Constant that holds "55:131" "Intro to VLSI" "Project 4"
+    57                                               parameter [7:0] digilent_screen[0:3][0:15] = '{'{8'h35, 8'h35, 8'h3A, 8'h31, 8'h33, 8'h31, 8'h20, 8'h20, 8'h20, 8'h20, 8'h20, 8'h20, 8'h20, 8'h20, 8'h20, 8'h20}, {8'h49, 8'h6E, 8'h74, 8'h72, 8'h6F, 8'h20, 8'h74, 8'h6F, 8'h20, 8'h56, 8'h4C, 8'h53, 8'h49, 8'h20, 8'h20, 8'h20}, {8'h50, 8'h72, 8'h6F, 8'h6A, 8'h65, 8'h63, 8'h74, 8'h20, 8'h33, 8'h20, 8'h20, 8'h20, 8'h20, 8'h20, 8'h20, 8'h20}, {8'h20, 8'h20, 8'h20, 8'h20, 8'h20, 8'h20, 8'h20, 8'h20, 8'h20, 8'h20, 8'h20, 8'h20, 8'h20, 8'h20, 8'h20, 8'h20}};
+    58                                               
+    59                                               //Current overall state of the state machine
+    60                                               reg [143:0] current_state;
+    61                                               //State to go to after the SPI transmission is finished
+    62                                               reg [111:0] after_state;
+    63                                               //State to go to after the set page sequence
+    64                                               reg [142:0] after_page_state;
+    65                                               //State to go to after sending the character sequence
+    66                                               reg [95:0] after_char_state;
+    67                                               //State to go to after the UpdateScreen is finished
+    68                                               reg [39:0] after_update_state;
+    69                                             
+    70                                             	integer i = 0;
+    71                                             	integer j = 0;
+    72                                             
+    73                                               //Contains the value to be outputted to DC
+    74                                               reg temp_dc;
+    75                                               
+    76                                               //-------------- Variables used in the Delay Controller Block --------------
+    77                                               reg [11:0] temp_delay_ms;		//amount of ms to delay
+    78                                               reg temp_delay_en;				  //Enable signal for the delay block
+    79                                               wire temp_delay_fin;				//Finish signal for the delay block
+    80                                               
+    81                                               //-------------- Variables used in the SPI controller block ----------------
+    82                                               reg temp_spi_en;					  //Enable signal for the SPI block
+    83                                               reg [7:0] temp_spi_data;		//Data to be sent out on SPI
+    84                                               wire temp_spi_fin;				  //Finish signal for the SPI block
+    85                                               
+    86                                               reg [7:0]  temp_char;				//Contains ASCII value for character
+    87                                               reg [10:0] temp_addr;			  //Contains address to BYTE needed in memory
+    88                                               wire [7:0] temp_dout;			  //Contains byte outputted from memory
+    89                                               reg [1:0]  temp_page;				//Current page
+    90                                               reg [3:0]  temp_index;			//Current character on page
+    91                                             
+    92                                             // ===========================================================================
+    93                                             // 										Implementation
+    94                                             // ===========================================================================
+    95                                             
+    96                                                assign DC = temp_dc;
+    97                                                //Example finish flag only high when in done state
+    98                            1       9657        assign FIN = (current_state == "Done") ? 1'b1 : 1'b0;
+    99                                             
+    100                                               //Instantiate SPI Block
+    101                                               SpiCtrl SPI_COMP(
+    102                                            			.CLK(CLK),
+    103                                            			.RST(RST),
+    104                                            			.SPI_EN(temp_spi_en),
+    105                                            			.SPI_DATA(temp_spi_data),
+    106                                            			.CS(CS),
+    107                                            			.SDO(SDO),
+    108                                            			.SCLK(SCLK),
+    109                                            			.SPI_FIN(temp_spi_fin)
+    110                                            	);
+    111                                            
+    112                                               //Instantiate Delay Block
+    113                                               Delay DELAY_COMP(
+    114                                            			.CLK(CLK),
+    115                                            			.RST(RST),
+    116                                            			.DELAY_MS(temp_delay_ms),
+    117                                            			.DELAY_EN(temp_delay_en),
+    118                                            			.DELAY_FIN(temp_delay_fin)
+    119                                            	);
+    120                                            
+    121                                               //Instantiate Memory Block
+    122                                               charLib CHAR_LIB_COMP(
+    123                                            			.clka(CLK),
+    124                                            			.addra(temp_addr),
+    125                                            			.douta(temp_dout)
+    126                                            	);
+    127                                            	
+    128                                            	// Initialize indexes
+    129                                            	initial begin
+    130                           1          1     		temp_page   = 2'b00;
+    131                           1          1     	  temp_index  = 4'b0000;
+    132                                            	end  
+    133                                            	
+    134                                            	//  State Machine
+    135                           1    1000000     	always @(posedge CLK) begin
+    136                                            			
+    137                                            		case(current_state)
+    138                                            
+    139                                            			// Idle until EN pulled high, then intialize Page to 0 and go to state Alphabet afterwards
+    140                                            			"Idle" : begin
+    141                                            				if(EN == 1'b1) begin
+    142                           1          1     					current_state <= "ClearDC";
+    143                           1          1     					after_page_state <= "Alphabet";
+    144                           1          1     					temp_page <= 2'b00;
+    145                                            				end
+    146                                            			end
+    147                                            			
+    148                                            			// Set current_screen to constant alphabet_screen and update the screen.  Go to state Wait1 afterwards
+    149                                            			"Alphabet" : begin
+    150                           1          1     				for(i = 0; i <= 3 ; i=i+1) begin
+    150                           2          4     
+    151                           1          4     				  for(j = 0; j <= 15 ; j=j+1) begin
+    151                           2         64     
+    152                           1         64                 current_screen[i][j] <= alphabet_screen[i][j];
+    153                                            					end
+    154                                            				end
+    155                                            					
+    156                           1          1     				current_state <= "UpdateScreen";
+    157                           1          1     				after_update_state <= "Wait1";
+    158                                            			end
+    159                                            			
+    160                                            			// Wait 4ms and go to ClearScreen
+    161                                            			"Wait1" : begin
+    162                           1          1     				temp_delay_ms <= 12'b111110100000; //4000
+    163                           1          1     				after_state <= "ClearScreen";
+    164                           1          1     				current_state <= "Transition3"; // Transition3 = The delay transition states
+    165                                            			end
+    166                                            			
+    167                                            			// set current_screen to constant clear_screen and update the screen. Go to state Wait2 afterwards
+    168                                            			"ClearScreen" : begin
+    169                           1          1     				for(i = 0; i <= 3 ; i=i+1) begin
+    169                           2          4     
+    170                           1          4     					for(j = 0; j <= 15 ; j=j+1) begin
+    170                           2         64     
+    171                           1         64                  current_screen[i][j] <= clear_screen[i][j];
+    172                                            					end
+    173                                            				end
+    174                                            					
+    175                           1          1     				after_update_state <= "Wait2";
+    176                           1          1     				current_state <= "UpdateScreen";
+    177                                            			end
+    178                                            			
+    179                                            			// Wait 1ms and go to DigilentScreen
+    180                                            			"Wait2" : begin
+    181                           1          1     				temp_delay_ms <= 12'b001111101000; //1000
+    182                           1          1     				after_state <= "DigilentScreen";
+    183                           1          1     				current_state <= "Transition3"; // Transition3 = The delay transition states
+    184                                            			end
+    185                                            			
+    186                                            			// Set currentScreen to constant digilent_screen and update the screen. Go to state Done afterwards
+    187                                            			"DigilentScreen" : begin
+    188                           1          1     				for(i = 0; i <= 3 ; i=i+1) begin
+    188                           2          4     
+    189                           1          4     					for(j = 0; j <= 15 ; j=j+1) begin
+    189                           2         64     
+    190                           1         64                 current_screen[i][j] <= digilent_screen[i][j];
+    191                                            					end
+    192                                            				end
+    193                                            					
+    194                           1          1     				after_update_state <= "Done";
+    195                           1          1     				current_state <= "UpdateScreen";
+    196                                            			end
+    197                                            			
+    198                                            			// Do nothing until EN is deassertted and then current_state is Idle
+    199                                            			"Done" : begin
+    200                                            				if(EN == 1'b0) begin
+    201                           1          1     					current_state <= "Idle";
+    202                                            				end
+    203                                            			end
+    204                                            			
+    205                                            			//UpdateScreen State
+    206                                            			//1. Gets ASCII value from current_screen at the current page and the current spot of the page
+    207                                            			//2. If on the last character of the page transition update the page number, if on the last page(3)
+    208                                            			//			then the updateScreen go to "after_update_state" after
+    209                                            			"UpdateScreen" : begin
+    210                                            
+    211                           1        192     				temp_char <= current_screen[temp_page][temp_index];
+    212                                            
+    213                                            				if(temp_index == 'd15) begin
+    214                                            
+    215                           1         12     					temp_index <= 'd0;
+    216                           1         12     					temp_page <= temp_page + 1'b1;
+    217                           1         12     					after_char_state <= "ClearDC";
+    218                                            
+    219                                            					if(temp_page == 2'b11) begin
+    220                           1          3     						after_page_state <= after_update_state;
+    221                                            					end
+    222                                            					else	begin
+    223                           1          9     						after_page_state <= "UpdateScreen";
+    224                                            					end
+    225                                            				end
+    226                                            				else begin
+    227                           1        180     					temp_index <= temp_index + 1'b1;
+    228                           1        180     					after_char_state <= "UpdateScreen";
+    229                                            				end
+    230                                            					
+    231                           1        192     				current_state <= "SendChar1";
+    232                                            
+    233                                            			end
+    234                                            			
+    235                                            			//Update Page states
+    236                                            			//1. Sets DC to command mode
+    237                                            			//2. Sends the SetPage Command
+    238                                            			//3. Sends the Page to be set to
+    239                                            			//4. Sets the start pixel to the left column
+    240                                            			//5. Sets DC to data mode
+    241                                            			"ClearDC" : begin
+    242                           1         13     				temp_dc <= 1'b0;
+    243                           1         13     				current_state <= "SetPage";
+    244                                            			end
+    245                                            			
+    246                                            			"SetPage" : begin
+    247                           1         13     				temp_spi_data <= 8'b00100010;
+    248                           1         13     				after_state <= "PageNum";
+    249                           1         13     				current_state <= "Transition1";
+    250                                            			end
+    251                                            			
+    252                                            			"PageNum" : begin
+    253                           1         13     				temp_spi_data <= {6'b000000,temp_page};
+    254                           1         13     				after_state <= "LeftColumn1";
+    255                           1         13     				current_state <= "Transition1";
+    256                                            			end
+    257                                            			
+    258                                            			"LeftColumn1" : begin
+    259                           1         13     				temp_spi_data <= 8'b00000000;
+    260                           1         13     				after_state <= "LeftColumn2";
+    261                           1         13     				current_state <= "Transition1";
+    262                                            			end
+    263                                            			
+    264                                            			"LeftColumn2" : begin
+    265                           1         13     				temp_spi_data <= 8'b00010000;
+    266                           1         13     				after_state <= "SetDC";
+    267                           1         13     				current_state <= "Transition1";
+    268                                            			end
+    269                                            			
+    270                                            			"SetDC" : begin
+    271                           1         13     				temp_dc <= 1'b1;
+    272                           1         13     				current_state <= after_page_state;
+    273                                            			end
+    274                                            			
+    275                                            			//Send Character States
+    276                                            			//1. Sets the Address to ASCII value of char with the counter appended to the end
+    277                                            			//2. Waits a clock for the data to get ready by going to ReadMem and ReadMem2 states
+    278                                            			//3. Send the byte of data given by the block Ram
+    279                                            			//4. Repeat 7 more times for the rest of the character bytes
+    280                                            			"SendChar1" : begin
+    281                           1        192     				temp_addr <= {temp_char, 3'b000};
+    282                           1        192     				after_state <= "SendChar2";
+    283                           1        192     				current_state <= "ReadMem";
+    284                                            			end
+    285                                            			
+    286                                            			"SendChar2" : begin
+    287                           1        192     				temp_addr <= {temp_char, 3'b001};
+    288                           1        192     				after_state <= "SendChar3";
+    289                           1        192     				current_state <= "ReadMem";
+    290                                            			end
+    291                                            			
+    292                                            			"SendChar3" : begin
+    293                           1        192     				temp_addr <= {temp_char, 3'b010};
+    294                           1        192     				after_state <= "SendChar4";
+    295                           1        192     				current_state <= "ReadMem";
+    296                                            			end
+    297                                            			
+    298                                            			"SendChar4" : begin
+    299                           1        192     				temp_addr <= {temp_char, 3'b011};
+    300                           1        192     				after_state <= "SendChar5";
+    301                           1        192     				current_state <= "ReadMem";
+    302                                            			end
+    303                                            			
+    304                                            			"SendChar5" : begin
+    305                           1        192     				temp_addr <= {temp_char, 3'b100};
+    306                           1        192     				after_state <= "SendChar6";
+    307                           1        192     				current_state <= "ReadMem";
+    308                                            			end
+    309                                            			
+    310                                            			"SendChar6" : begin
+    311                           1        192     				temp_addr <= {temp_char, 3'b101};
+    312                           1        192     				after_state <= "SendChar7";
+    313                           1        192     				current_state <= "ReadMem";
+    314                                            			end
+    315                                            			
+    316                                            			"SendChar7" : begin
+    317                           1        192     				temp_addr <= {temp_char, 3'b110};
+    318                           1        192     				after_state <= "SendChar8";
+    319                           1        192     				current_state <= "ReadMem";
+    320                                            			end
+    321                                            			
+    322                                            			"SendChar8" : begin
+    323                           1        192     				temp_addr <= {temp_char, 3'b111};
+    324                           1        192     				after_state <= after_char_state;
+    325                           1        192     				current_state <= "ReadMem";
+    326                                            			end
+    327                                            			
+    328                                            			"ReadMem" : begin
+    329                           1       1536     				current_state <= "ReadMem2";
+    330                                            			end
+    331                                            
+    332                                            			"ReadMem2" : begin
+    333                           1       1536     				temp_spi_data <= temp_dout;
+    334                           1       1536     				current_state <= "Transition1";
+    335                                            			end
+    336                                            			//  End Send Character States
+    337                                            
+    338                                            			// SPI transitions
+    339                                            			// 1. Set SPI_EN to 1
+    340                                            			// 2. Waits for SpiCtrl to finish
+    341                                            			// 3. Goes to clear state (Transition5)
+    342                                            			"Transition1" : begin
+    343                           1       1588     				temp_spi_en <= 1'b1;
+    344                           1       1588     				current_state <= "Transition2";
+    345                                            			end
+    346                                            
+    347                                            			"Transition2" : begin
+    348                                            				if(temp_spi_fin == 1'b1) begin
+    349                           1       1588     					current_state <= "Transition5";
+    350                                            				end
+    351                                            			end
+    352                                            
+    353                                            			// Delay Transitions
+    354                                            			// 1. Set DELAY_EN to 1
+    355                                            			// 2. Waits for Delay to finish
+    356                                            			// 3. Goes to Clear state (Transition5)
+    357                                            			"Transition3" : begin
+    358                           1          2     				temp_delay_en <= 1'b1;
+    359                           1          2     				current_state <= "Transition4";
+    360                                            			end
+    361                                            
+    362                                            			"Transition4" : begin
+    363                                            				if(temp_delay_fin == 1'b1) begin
+    364                           1          2     				  current_state <= "Transition5";
+    365                                            				end
+    366                                            			end
+    367                                            
+    368                                            			// Clear transition
+    369                                            			// 1. Sets both DELAY_EN and SPI_EN to 0
+    370                                            			// 2. Go to after state
+    371                                            			"Transition5" : begin
+    372                           1       1590     				temp_spi_en <= 1'b0;
+    373                           1       1590     			  temp_delay_en <= 1'b0;
+    374                           1       1590     				current_state <= after_state;
+    375                                            			end
+    376                                            			//END SPI transitions
+    377                                            			//END Delay Transitions
+    378                                            			//END Clear transition
+    379                                            
+    380                           1          1     			default : current_state <= "Idle";
+    381                                            
+    382                                            		endcase
+    383                                            	end
+    384                                            
+    385                                            endmodule
+
+Branch Coverage:
+    Enabled Coverage        Active      Hits % Covered
+    ----------------        ------      ---- ---------
+    Branches                    42        42     100.0
+
+================================Branch Details================================
+
+Branch Coverage for file OledEX.v --
+
+------------------------------------CASE Branch------------------------------------
+    137                                1000000     Count coming in to CASE
+    140                           1      67696     			"Idle" : begin
+    149                           1          1     			"Alphabet" : begin
+    161                           1          1     			"Wait1" : begin
+    168                           1          1     			"ClearScreen" : begin
+    180                           1          1     			"Wait2" : begin
+    187                           1          1     			"DigilentScreen" : begin
+    199                           1          2     			"Done" : begin
+    209                           1        192     			"UpdateScreen" : begin
+    241                           1         13     			"ClearDC" : begin
+    246                           1         13     			"SetPage" : begin
+    252                           1         13     			"PageNum" : begin
+    258                           1         13     			"LeftColumn1" : begin
+    264                           1         13     			"LeftColumn2" : begin
+    270                           1         13     			"SetDC" : begin
+    280                           1        192     			"SendChar1" : begin
+    286                           1        192     			"SendChar2" : begin
+    292                           1        192     			"SendChar3" : begin
+    298                           1        192     			"SendChar4" : begin
+    304                           1        192     			"SendChar5" : begin
+    310                           1        192     			"SendChar6" : begin
+    316                           1        192     			"SendChar7" : begin
+    322                           1        192     			"SendChar8" : begin
+    328                           1       1536     			"ReadMem" : begin
+    332                           1       1536     			"ReadMem2" : begin
+    342                           1       1588     			"Transition1" : begin
+    347                           1     419232     			"Transition2" : begin
+    357                           1          2     			"Transition3" : begin
+    362                           1     505006     			"Transition4" : begin
+    371                           1       1590     			"Transition5" : begin
+    380                           1          1     			default : current_state <= "Idle";
+Branch totals: 30 hits of 30 branches = 100.0%
+
+------------------------------------IF Branch------------------------------------
+    141                                  67696     Count coming in to IF
+    141                           1          1     				if(EN == 1'b1) begin
+                                         67695     All False Count
+Branch totals: 2 hits of 2 branches = 100.0%
+
+------------------------------------IF Branch------------------------------------
+    200                                      2     Count coming in to IF
+    200                           1          1     				if(EN == 1'b0) begin
+                                             1     All False Count
+Branch totals: 2 hits of 2 branches = 100.0%
+
+------------------------------------IF Branch------------------------------------
+    213                                    192     Count coming in to IF
+    213                           1         12     				if(temp_index == 'd15) begin
+    226                           1        180     				else begin
+Branch totals: 2 hits of 2 branches = 100.0%
+
+------------------------------------IF Branch------------------------------------
+    219                                     12     Count coming in to IF
+    219                           1          3     					if(temp_page == 2'b11) begin
+    222                           1          9     					else	begin
+Branch totals: 2 hits of 2 branches = 100.0%
+
+------------------------------------IF Branch------------------------------------
+    348                                 419232     Count coming in to IF
+    348                           1       1588     				if(temp_spi_fin == 1'b1) begin
+                                        417644     All False Count
+Branch totals: 2 hits of 2 branches = 100.0%
+
+------------------------------------IF Branch------------------------------------
+    363                                 505006     Count coming in to IF
+    363                           1          2     				if(temp_delay_fin == 1'b1) begin
+                                        505004     All False Count
+Branch totals: 2 hits of 2 branches = 100.0%
+
+
+Condition Coverage:
+    Enabled Coverage        Active      Hits % Covered
+    ----------------        ------      ---- ---------
+    Conditions                   0         0     100.0
+    Fec Conditions               0         0     100.0
+Expression Coverage:
+    Enabled Coverage        Active      Hits % Covered
+    ----------------        ------      ---- ---------
+    Expressions                  0         0     100.0
+    Fec Expressions              0         0     100.0
+
+File: OledInit.v
+Statement Coverage:
+    Enabled Coverage        Active      Hits % Covered
+    ----------------        ------      ---- ---------
+    Stmts                       74        70      94.5
+
+================================Statement Details================================
+
+Statement Coverage for file OledInit.v --
+
+    1                                              `timescale 1ns / 1ps
+    2                                              //////////////////////////////////////////////////////////////////////////////////
+    3                                              // Company: Digilent Inc.
+    4                                              // Engineers: Ryan Kim
+    5                                              //				  Josh Sackos
+    6                                              // 
+    7                                              // Create Date:    14:49:54 06/12/2012 
+    8                                              // Module Name:    OledInit 
+    9                                              // Project Name: 	 PmodOLED Demo
+    10                                             // Target Devices: Nexys3
+    11                                             // Tool versions:  ISE 14.1
+    12                                             // Description: 	 Runs the initialization sequence for the PmodOLED
+    13                                             //
+    14                                             // Revision 0.01 - File Created
+    15                                             //
+    16                                             //////////////////////////////////////////////////////////////////////////////////
+    17                                             module OledInit(
+    18                                                 CLK,
+    19                                                 EN,
+    20                                                 RST,
+    21                                                 CS,
+    22                                                 DC,
+    23                                                 FIN,
+    24                                                 RES,
+    25                                                 SCLK,
+    26                                                 SDO,
+    27                                                 VBAT,
+    28                                                 VDD
+    29                                                 );
+    30                                             
+    31                                             	// ===========================================================================
+    32                                             	// 										Port Declarations
+    33                                             	// ===========================================================================
+    34                                                 input CLK;
+    35                                                 input EN;
+    36                                                 input RST;
+    37                                                 output CS;
+    38                                                 output DC;
+    39                                                 output FIN;
+    40                                                 output RES;
+    41                                                 output SCLK;
+    42                                                 output SDO;
+    43                                                 output VBAT;
+    44                                                 output VDD;
+    45                                             
+    46                                             	// ===========================================================================
+    47                                             	// 							  Parameters, Regsiters, and Wires
+    48                                             	// ===========================================================================
+    49                                             	wire DC, RES, VBAT, VDD, FIN;
+    50                                             	wire CS, SCLK, SDO;
+    51                                             
+    52                                             	reg [103:0] current_state = "Idle";
+    53                                             	reg [103:0] after_state = "Idle";
+    54                                             
+    55                                             	reg temp_dc = 1'b0;
+    56                                             	reg temp_res = 1'b1;
+    57                                             	reg temp_vbat = 1'b1;
+    58                                             	reg temp_vdd = 1'b1;
+    59                                             	reg temp_fin = 1'b0;
+    60                                             	
+    61                                             	wire [11:0] temp_delay_ms;
+    62                                             	reg temp_delay_en = 1'b0;
+    63                                             	wire temp_delay_fin;
+    64                                             	reg temp_spi_en = 1'b0;
+    65                                             	reg [7:0] temp_spi_data = 8'h00;
+    66                                             	wire temp_spi_fin;
+    67                                             
+    68                                             	// ===========================================================================
+    69                                             	// 										Implementation
+    70                                             	// ===========================================================================	
+    71                                             	SpiCtrl SPI_COMP(
+    72                                             			.CLK(CLK),
+    73                                             			.RST(RST),
+    74                                             			.SPI_EN(temp_spi_en),
+    75                                             			.SPI_DATA(temp_spi_data),
+    76                                             			.CS(CS),
+    77                                             			.SDO(SDO),
+    78                                             			.SCLK(SCLK),
+    79                                             			.SPI_FIN(temp_spi_fin)
+    80                                             	);
+    81                                             	
+    82                                             	Delay DELAY_COMP(
+    83                                             			.CLK(CLK),
+    84                                             			.RST(RST),
+    85                                             			.DELAY_MS(temp_delay_ms),
+    86                                             			.DELAY_EN(temp_delay_en),
+    87                                             			.DELAY_FIN(temp_delay_fin)
+    88                                             	);
+    89                                             
+    90                                             	assign DC = temp_dc;
+    91                                             	assign RES = temp_res;
+    92                                             	assign VBAT = temp_vbat;
+    93                                             	assign VDD = temp_vdd;
+    94                                             	assign FIN = temp_fin;
+    95                                             
+    96                                             	// Delay 100 ms after VbatOn
+    97                            1         17     	assign temp_delay_ms = (after_state == "DispContrast1") ? 12'h064 : 12'h001;
+    98                                             
+    99                                             
+    100                                            	// State Machine
+    101                           1    1000000     	always @(posedge CLK) begin
+    102                                            			if(RST == 1'b1) begin
+    103                           1          4     					current_state <= "Idle";
+    104                           1          4     					temp_res <= 1'b0;
+    105                                            			end
+    106                                            			else begin
+    107                           1     999996     					temp_res <= 1'b1;
+    108                                            					
+    109                                            					case(current_state)
+    110                                            
+    111                                            							// Idle State
+    112                                            							"Idle" : begin
+    113                                            									if(EN == 1'b1) begin
+    114                           1          1     										temp_dc <= 1'b0;
+    115                           1          1     										current_state <= "VddOn";
+    116                                            									end
+    117                                            							end
+    118                                            
+    119                                            							// Initialization Sequence
+    120                                            							// This should be done everytime the PmodOLED is started
+    121                                            							"VddOn" : begin
+    122                           1          1     								temp_vdd <= 1'b0;
+    123                           1          1     								current_state <= "Wait1";
+    124                                            							end
+    125                                            
+    126                                            							// 3
+    127                                            							"Wait1" : begin
+    128                           1          1     								after_state <= "DispOff";
+    129                           1          1     								current_state <= "Transition3";
+    130                                            							end
+    131                                            
+    132                                            							// 4
+    133                                            							"DispOff" : begin
+    134                           1          1     								temp_spi_data <= 8'hAE; // 0xAE
+    135                           1          1     								after_state <= "ResetOn";
+    136                           1          1     								current_state <= "Transition1";
+    137                                            							end
+    138                                            
+    139                                            							// 5
+    140                                            							"ResetOn" : begin
+    141                           1          1     								temp_res <= 1'b0;
+    142                           1          1     								current_state <= "Wait2";
+    143                                            							end
+    144                                            
+    145                                            							// 6							
+    146                                            							"Wait2" : begin
+    147                           1          1     								after_state <= "ResetOff";
+    148                           1          1     								current_state <= "Transition3";
+    149                                            							end
+    150                                            
+    151                                            							// 7
+    152                                            							"ResetOff" : begin
+    153                           1          1     								temp_res <= 1'b1;
+    154                           1          1     								after_state <= "ChargePump1";
+    155                           1          1     								current_state <= "Transition3";
+    156                                            							end
+    157                                            
+    158                                            							// 8
+    159                                            							"ChargePump1" : begin
+    160                           1          1     								temp_spi_data <= 8'h8D; //0x8D
+    161                           1          1     								after_state <= "ChargePump2";
+    162                           1          1     								current_state <= "Transition1";
+    163                                            							end
+    164                                            
+    165                                            							// 9
+    166                                            							"ChargePump2" : begin
+    167                           1          1     								temp_spi_data <= 8'h14; // 0x14
+    168                           1          1     								after_state <= "PreCharge1";
+    169                           1          1     								current_state <= "Transition1";
+    170                                            							end
+    171                                            
+    172                                            							// 10
+    173                                            							"PreCharge1" : begin
+    174                           1          1     								temp_spi_data <= 8'hD9; // 0xD9
+    175                           1          1     								after_state <= "PreCharge2";
+    176                           1          1     								current_state <= "Transition1";
+    177                                            							end
+    178                                            
+    179                                            							// 11
+    180                                            							"PreCharge2" : begin
+    181                           1          1     								temp_spi_data <= 8'hF1; // 0xF1
+    182                           1          1     								after_state <= "VbatOn";
+    183                           1          1     								current_state <= "Transition1";
+    184                                            							end
+    185                                            
+    186                                            							// 12
+    187                                            							"VbatOn" : begin
+    188                           1          1     								temp_vbat <= 1'b0;
+    189                           1          1     								current_state <= "Wait3";
+    190                                            							end
+    191                                            
+    192                                            							// 13
+    193                                            							"Wait3" : begin
+    194                           1          1     								after_state <= "DispContrast1";
+    195                           1          1     								current_state <= "Transition3";
+    196                                            							end
+    197                                            
+    198                                            							// 14
+    199                                            							"DispContrast1" : begin
+    200                           1          1     								temp_spi_data <= 8'h81; // 0x81
+    201                           1          1     								after_state <= "DispContrast2";
+    202                           1          1     								current_state <= "Transition1";
+    203                                            							end
+    204                                            
+    205                                            							// 15
+    206                                            							"DispContrast2" : begin
+    207                           1          1     								temp_spi_data <= 8'h0F; // 0x0F
+    208                           1          1     								after_state <= "InvertDisp1";
+    209                           1          1     								current_state <= "Transition1";
+    210                                            							end
+    211                                            
+    212                                            							// 16
+    213                                            							"InvertDisp1" : begin
+    214                           1          1     								temp_spi_data <= 8'hA1; // 0xA1
+    215                           1          1     								after_state <= "InvertDisp2";
+    216                           1          1     								current_state <= "Transition1";
+    217                                            							end
+    218                                            
+    219                                            							// 17
+    220                                            							"InvertDisp2" : begin
+    221                           1          1     								temp_spi_data <= 8'hC8; // 0xC8
+    222                           1          1     								after_state <= "ComConfig1";
+    223                           1          1     								current_state <= "Transition1";
+    224                                            							end
+    225                                            
+    226                                            							// 18
+    227                                            							"ComConfig1" : begin
+    228                           1          1     								temp_spi_data <= 8'hDA; // 0xDA
+    229                           1          1     								after_state <= "ComConfig2";
+    230                           1          1     								current_state <= "Transition1";
+    231                                            							end
+    232                                            
+    233                                            							// 19
+    234                                            							"ComConfig2" : begin
+    235                           1          1     								temp_spi_data <= 8'h20; // 0x20
+    236                           1          1     								after_state <= "DispOn";
+    237                           1          1     								current_state <= "Transition1";
+    238                                            							end
+    239                                            
+    240                                            							// 20
+    241                                            							"DispOn" : begin
+    242                           1          1     								temp_spi_data <= 8'hAF; // 0xAF
+    243                           1          1     								after_state <= "Done";
+    244                           1          1     								current_state <= "Transition1";
+    245                                            							end
+    246                                            						   // ************ END Initialization sequence ************
+    247                                            
+    248                                            							// Used for debugging, This command turns the entire screen on regardless of memory
+    249                                            							"FullDisp" : begin
+    250                           1    ***0***     								temp_spi_data <= 8'hA5; // 0xA5
+    251                           1    ***0***     								after_state <= "Done";
+    252                           1    ***0***     								current_state <= "Transition1";
+    253                                            							end
+    254                                            
+    255                                            						   // Done state
+    256                                            							"Done" : begin
+    257                                            								if(EN == 1'b0) begin
+    258                           1          1     									temp_fin <= 1'b0;
+    259                           1          1     									current_state <= "Idle";
+    260                                            								end
+    261                                            								else begin
+    262                           1          2     									temp_fin <= 1'b1;
+    263                                            								end
+    264                                            							end
+    265                                            
+    266                                            							// SPI transitions
+    267                                            							// 1. Set SPI_EN to 1
+    268                                            							// 2. Waits for SpiCtrl to finish
+    269                                            							// 3. Goes to clear state (Transition5)
+    270                                            							"Transition1" : begin
+    271                           1         12     								temp_spi_en <= 1'b1;
+    272                           1         12     								current_state <= "Transition2";
+    273                                            							end
+    274                                            
+    275                                            							// 24
+    276                                            							"Transition2" : begin
+    277                                            								if(temp_spi_fin == 1'b1) begin
+    278                           1         12     									current_state <= "Transition5";
+    279                                            								end
+    280                                            							end
+    281                                            
+    282                                            							// Delay Transitions
+    283                                            							// 1. Set DELAY_EN to 1
+    284                                            							// 2. Waits for Delay to finish
+    285                                            							// 3. Goes to Clear state (Transition5)	
+    286                                            							"Transition3" : begin
+    287                           1          4     								temp_delay_en <= 1'b1;
+    288                           1          4     								current_state <= "Transition4";
+    289                                            							end
+    290                                            
+    291                                            							// 26
+    292                                            							"Transition4" : begin
+    293                                            								if(temp_delay_fin == 1'b1) begin
+    294                           1          4     									current_state <= "Transition5";
+    295                                            								end
+    296                                            							end
+    297                                            
+    298                                            							// Clear transition
+    299                                            							// 1. Sets both DELAY_EN and SPI_EN to 0
+    300                                            							// 2. Go to after state
+    301                                            							"Transition5" : begin
+    302                           1         16     								temp_spi_en <= 1'b0;
+    303                           1         16     								temp_delay_en <= 1'b0;
+    304                           1         16     								current_state <= after_state;
+    305                                            							end
+    306                                            
+    307                           1    ***0***     							default : current_state <= "Idle";
+    308                                            
+    309                                            					endcase
+    310                                            			end
+    311                                            	end
+    312                                            
+    313                                            endmodule
+
+Branch Coverage:
+    Enabled Coverage        Active      Hits % Covered
+    ----------------        ------      ---- ---------
+    Branches                    40        38      95.0
+
+================================Branch Details================================
+
+Branch Coverage for file OledInit.v --
+
+------------------------------------IF Branch------------------------------------
+    97                                      17     Count coming in to IF
+    97                            1          1     	assign temp_delay_ms = (after_state == "DispContrast1") ? 12'h064 : 12'h001;
+    97                            2         16     	assign temp_delay_ms = (after_state == "DispContrast1") ? 12'h064 : 12'h001;
+Branch totals: 2 hits of 2 branches = 100.0%
+
+------------------------------------IF Branch------------------------------------
+    102                                1000000     Count coming in to IF
+    102                           1          4     			if(RST == 1'b1) begin
+    106                           1     999996     			else begin
+Branch totals: 2 hits of 2 branches = 100.0%
+
+------------------------------------CASE Branch------------------------------------
+    109                                 999996     Count coming in to CASE
+    112                           1     986359     							"Idle" : begin
+    121                           1          1     							"VddOn" : begin
+    127                           1          1     							"Wait1" : begin
+    133                           1          1     							"DispOff" : begin
+    140                           1          1     							"ResetOn" : begin
+    146                           1          1     							"Wait2" : begin
+    152                           1          1     							"ResetOff" : begin
+    159                           1          1     							"ChargePump1" : begin
+    166                           1          1     							"ChargePump2" : begin
+    173                           1          1     							"PreCharge1" : begin
+    180                           1          1     							"PreCharge2" : begin
+    187                           1          1     							"VbatOn" : begin
+    193                           1          1     							"Wait3" : begin
+    199                           1          1     							"DispContrast1" : begin
+    206                           1          1     							"DispContrast2" : begin
+    213                           1          1     							"InvertDisp1" : begin
+    220                           1          1     							"InvertDisp2" : begin
+    227                           1          1     							"ComConfig1" : begin
+    234                           1          1     							"ComConfig2" : begin
+    241                           1          1     							"DispOn" : begin
+    249                           1    ***0***     							"FullDisp" : begin
+    256                           1          3     							"Done" : begin
+    270                           1         12     							"Transition1" : begin
+    276                           1       3168     							"Transition2" : begin
+    286                           1          4     							"Transition3" : begin
+    292                           1      10415     							"Transition4" : begin
+    301                           1         16     							"Transition5" : begin
+    307                           1    ***0***     							default : current_state <= "Idle";
+Branch totals: 26 hits of 28 branches = 92.8%
+
+------------------------------------IF Branch------------------------------------
+    113                                 986359     Count coming in to IF
+    113                           1          1     									if(EN == 1'b1) begin
+                                        986358     All False Count
+Branch totals: 2 hits of 2 branches = 100.0%
+
+------------------------------------IF Branch------------------------------------
+    257                                      3     Count coming in to IF
+    257                           1          1     								if(EN == 1'b0) begin
+    261                           1          2     								else begin
+Branch totals: 2 hits of 2 branches = 100.0%
+
+------------------------------------IF Branch------------------------------------
+    277                                   3168     Count coming in to IF
+    277                           1         12     								if(temp_spi_fin == 1'b1) begin
+                                          3156     All False Count
+Branch totals: 2 hits of 2 branches = 100.0%
+
+------------------------------------IF Branch------------------------------------
+    293                                  10415     Count coming in to IF
+    293                           1          4     								if(temp_delay_fin == 1'b1) begin
+                                         10411     All False Count
+Branch totals: 2 hits of 2 branches = 100.0%
+
+
+Condition Coverage:
+    Enabled Coverage        Active      Hits % Covered
+    ----------------        ------      ---- ---------
+    Conditions                   0         0     100.0
+    Fec Conditions               0         0     100.0
+Expression Coverage:
+    Enabled Coverage        Active      Hits % Covered
+    ----------------        ------      ---- ---------
+    Expressions                  0         0     100.0
+    Fec Expressions              0         0     100.0
+
+File: PmodOLEDCtrl.v
+Statement Coverage:
+    Enabled Coverage        Active      Hits % Covered
+    ----------------        ------      ---- ---------
+    Stmts                       13        12      92.3
+
+================================Statement Details================================
+
+Statement Coverage for file PmodOLEDCtrl.v --
+
+    1                                              `timescale 1ns / 1ps
+    2                                              //////////////////////////////////////////////////////////////////////////////////
+    3                                              // Company: Digilent Inc.
+    4                                              // Engineers: Ryan Kim
+    5                                              //				  Josh Sackos
+    6                                              // 
+    7                                              // Create Date:    14:00:51 06/12/2012
+    8                                              // Module Name:    PmodOLEDCtrl 
+    9                                              // Project Name: 	 PmodOLED Demo
+    10                                             // Target Devices: Nexys3
+    11                                             // Tool versions:  ISE 14.1
+    12                                             // Description: 	 Top level controller that controls the PmodOLED blocks
+    13                                             //
+    14                                             // Revision: 1.1
+    15                                             // Revision 0.01 - File Created
+    16                                             //////////////////////////////////////////////////////////////////////////////////
+    17                                             module PmodOLEDCtrl(
+    18                                             		CLK,
+    19                                             		RST,
+    20                                             		CS,
+    21                                             		SDIN,
+    22                                             		SCLK,
+    23                                             		DC,
+    24                                             		RES,
+    25                                             		VBAT,
+    26                                             		VDD,
+    27                                             		LD0
+    28                                                 );
+    29                                             
+    30                                             	// ===========================================================================
+    31                                             	// 										Port Declarations
+    32                                             	// ===========================================================================
+    33                                             	input CLK;
+    34                                             	input RST;
+    35                                             	output CS;
+    36                                             	output SDIN;
+    37                                             	output SCLK;
+    38                                             	output DC;
+    39                                             	output RES;
+    40                                             	output VBAT;
+    41                                             	output VDD;
+    42                                             	output LD0;
+    43                                             
+    44                                             	// ===========================================================================
+    45                                             	// 							  Parameters, Regsiters, and Wires
+    46                                             	// ===========================================================================
+    47                                             	wire CS, SDIN, SCLK, DC;
+    48                                             	wire VDD, VBAT, RES;
+    49                                             
+    50                                             	reg [110:0] current_state = "Idle";
+    51                                             
+    52                                             	wire init_en;
+    53                                             	wire init_done;
+    54                                             	wire init_cs;
+    55                                             	wire init_sdo;
+    56                                             	wire init_sclk;
+    57                                             	wire init_dc;
+    58                                             	
+    59                                             	wire example_en;
+    60                                             	wire example_cs;
+    61                                             	wire example_sdo;
+    62                                             	wire example_sclk;
+    63                                             	wire example_dc;
+    64                                             	wire example_done;
+    65                                             	
+    66                                             	wire rst_b;
+    67                                             	// ===========================================================================
+    68                                             	// 										Implementation
+    69                                             	// ===========================================================================
+    70                                             
+    71                                             	assign rst_b = ~RST;
+    72                                             	
+    73                                             	assign LD0 = ~RST;
+    74                                             	
+    75                                             	OledInit Init(
+    76                                             			.CLK(CLK),
+    77                                             			.RST(rst_b),
+    78                                             			.EN(init_en),
+    79                                             			.CS(init_cs),
+    80                                             			.SDO(init_sdo),
+    81                                             			.SCLK(init_sclk),
+    82                                             			.DC(init_dc),
+    83                                             			.RES(RES),
+    84                                             			.VBAT(VBAT),
+    85                                             			.VDD(VDD),
+    86                                             			.FIN(init_done)
+    87                                             	);
+    88                                             	
+    89                                             	OledEX Example(
+    90                                             			.CLK(CLK),
+    91                                             			.RST(rst_b),
+    92                                             			.EN(example_en),
+    93                                             			.CS(example_cs),
+    94                                             			.SDO(example_sdo),
+    95                                             			.SCLK(example_sclk),
+    96                                             			.DC(example_dc),
+    97                                             			.FIN(example_done)
+    98                                             	);
+    99                                             
+    100                                            
+    101                                            	//MUXes to indicate which outputs are routed out depending on which block is enabled
+    102                           1       3205     	assign CS = (current_state == "OledInitialize")   ? init_cs   : example_cs;
+    103                           1       3313     	assign SDIN = (current_state == "OledInitialize") ? init_sdo  : example_sdo;
+    104                           1      25605     	assign SCLK = (current_state == "OledInitialize") ? init_sclk : example_sclk;
+    105                           1         31     	assign DC = (current_state == "OledInitialize")   ? init_dc   : example_dc;
+    106                                            	//END output MUXes
+    107                                            
+    108                                            	
+    109                                            	//MUXes that enable blocks when in the proper states
+    110                           1          4     	assign init_en = (current_state == "OledInitialize") ? 1'b1 : 1'b0;
+    111                           1          4     	assign example_en = (current_state == "OledExample") ? 1'b1 : 1'b0;
+    112                                            	//END enable MUXes
+    113                                            
+    114                                            	
+    115                                            	//  State Machine
+    116                           1    1000000     	always @(posedge CLK) begin
+    117                                            		if(rst_b == 1'b1) begin
+    118                           1          4     			current_state <= "Idle";
+    119                                            		end
+    120                                            		else begin
+    121                                            		  case(current_state)
+    122                                            			  "Idle" : begin
+    123                           1          1     				  current_state <= "OledInitialize";
+    124                                            				end
+    125                                              			// Go through the initialization sequence
+    126                                            				"OledInitialize" : begin
+    127                                            				  if(init_done == 1'b1) begin
+    128                           1          1     				    current_state <= "OledExample";
+    129                                            				  end
+    130                                            		    end
+    131                                            				// Do example and Do nothing when finished
+    132                                            				"OledExample" : begin
+    133                                            				  if(example_done == 1'b1) begin
+    134                           1          1     					  current_state <= "Done";
+    135                                            					end
+    136                                            				end
+    137                                            				// Do Nothing
+    138                                            				"Done" : begin
+    139                           1      54055     				  current_state <= "Done";
+    140                                            				end
+    141                                            						
+    142                           1    ***0***     				default : current_state <= "Idle";
+    143                                            		  endcase
+    144                                            	  end
+    145                                            	end
+    146                                            
+    147                                            endmodule
+
+Branch Coverage:
+    Enabled Coverage        Active      Hits % Covered
+    ----------------        ------      ---- ---------
+    Branches                    11        10      90.9
+
+================================Branch Details================================
+
+Branch Coverage for file PmodOLEDCtrl.v --
+
+------------------------------------IF Branch------------------------------------
+    117                                1000000     Count coming in to IF
+    117                           1          4     		if(rst_b == 1'b1) begin
+    120                           1     999996     		else begin
+Branch totals: 2 hits of 2 branches = 100.0%
+
+------------------------------------CASE Branch------------------------------------
+    121                                 999996     Count coming in to CASE
+    122                           1          1     			  "Idle" : begin
+    126                           1      13637     				"OledInitialize" : begin
+    132                           1     932303     				"OledExample" : begin
+    138                           1      54055     				"Done" : begin
+    142                           1    ***0***     				default : current_state <= "Idle";
+Branch totals: 4 hits of 5 branches = 80.0%
+
+------------------------------------IF Branch------------------------------------
+    127                                  13637     Count coming in to IF
+    127                           1          1     				  if(init_done == 1'b1) begin
+                                         13636     All False Count
+Branch totals: 2 hits of 2 branches = 100.0%
+
+------------------------------------IF Branch------------------------------------
+    133                                 932303     Count coming in to IF
+    133                           1          1     				  if(example_done == 1'b1) begin
+                                        932302     All False Count
+Branch totals: 2 hits of 2 branches = 100.0%
+
+
+Condition Coverage:
+    Enabled Coverage        Active      Hits % Covered
+    ----------------        ------      ---- ---------
+    Conditions                   0         0     100.0
+    Fec Conditions               0         0     100.0
+Expression Coverage:
+    Enabled Coverage        Active      Hits % Covered
+    ----------------        ------      ---- ---------
+    Expressions                 24        15      62.5
+    Fec Expressions             24        23      95.8
+
+================================Expression Details================================
+
+Expression Coverage for file PmodOLEDCtrl.v --
+
+------------------UDP Expression View (Short circuiting enabled)-------------------
+Line       102 Item    1 	assign CS = (current_state == "OledInitialize")   ? init_cs   : example_cs;
+Expression totals: 4 hits of 6 rows = 66.6%
+Truth Table:         (current_state == 'h4f6c6564496e697469616c697a65)
+                     |init_cs
+                     ||example_cs
+                hits |||((current_state == 'h4f6c6564496e697469616c697a65)? init_cs: example_cs)
+  Row   1:        12 10-0
+  Row   2:        13 11-1
+  Row   3:         E 1Z-Z
+  Row   4:      1588 0-00
+  Row   5:      1589 0-11
+  Row   6:         E 0-ZZ
+  Row   7:   ***0*** -000
+  Row   8:   ***0*** -111
+  unknown:         3 
+
+----------------Focused Expression View (Short circuiting enabled)-----------------
+Line       102 Item    1 	assign CS = (current_state == "OledInitialize")   ? init_cs   : example_cs;
+Expression totals: 6 hits of 6 rows = 100.0%
+     Rows:      hits         Fec Targets       Matching input patterns
+  --------  --------      --------------        ----------------------
+  Row   1:      3177 (current_state == 'h4f6c6564496e697469616c697a65)_0                   { 0-0 0-1 }
+  Row   2:        25 (current_state == 'h4f6c6564496e697469616c697a65)_1                   { 10- 11- }
+  Row   3:        12           init_cs_0                       { 10- }
+  Row   4:        13           init_cs_1                       { 11- }
+  Row   5:      1588        example_cs_0                       { 0-0 }
+  Row   6:      1589        example_cs_1                       { 0-1 }
+
+------------------UDP Expression View (Short circuiting enabled)-------------------
+Line       103 Item    1 	assign SDIN = (current_state == "OledInitialize") ? init_sdo  : example_sdo;
+Expression totals: 4 hits of 6 rows = 66.6%
+Truth Table:         (current_state == 'h4f6c6564496e697469616c697a65)
+                     |init_sdo
+                     ||example_sdo
+                hits |||((current_state == 'h4f6c6564496e697469616c697a65)? init_sdo: example_sdo)
+  Row   1:        24 10-0
+  Row   2:        25 11-1
+  Row   3:         E 1Z-Z
+  Row   4:        95 0-00
+  Row   5:      1632 0-11
+  Row   6:         E 0-ZZ
+  Row   7:   ***0*** -000
+  Row   8:   ***0*** -111
+  unknown:      1537 
+
+----------------Focused Expression View (Short circuiting enabled)-----------------
+Line       103 Item    1 	assign SDIN = (current_state == "OledInitialize") ? init_sdo  : example_sdo;
+Expression totals: 6 hits of 6 rows = 100.0%
+     Rows:      hits         Fec Targets       Matching input patterns
+  --------  --------      --------------        ----------------------
+  Row   1:      1727 (current_state == 'h4f6c6564496e697469616c697a65)_0                   { 0-0 0-1 }
+  Row   2:        49 (current_state == 'h4f6c6564496e697469616c697a65)_1                   { 10- 11- }
+  Row   3:        24          init_sdo_0                       { 10- }
+  Row   4:        25          init_sdo_1                       { 11- }
+  Row   5:        95       example_sdo_0                       { 0-0 }
+  Row   6:      1632       example_sdo_1                       { 0-1 }
+
+------------------UDP Expression View (Short circuiting enabled)-------------------
+Line       104 Item    1 	assign SCLK = (current_state == "OledInitialize") ? init_sclk : example_sclk;
+Expression totals: 4 hits of 6 rows = 66.6%
+Truth Table:         (current_state == 'h4f6c6564496e697469616c697a65)
+                     |init_sclk
+                     ||example_sclk
+                hits |||((current_state == 'h4f6c6564496e697469616c697a65)? init_sclk: example_sclk)
+  Row   1:        96 10-0
+  Row   2:        97 11-1
+  Row   3:         E 1Z-Z
+  Row   4:     12704 0-00
+  Row   5:     12707 0-11
+  Row   6:         E 0-ZZ
+  Row   7:   ***0*** -000
+  Row   8:   ***0*** -111
+  unknown:         1 
+
+----------------Focused Expression View (Short circuiting enabled)-----------------
+Line       104 Item    1 	assign SCLK = (current_state == "OledInitialize") ? init_sclk : example_sclk;
+Expression totals: 6 hits of 6 rows = 100.0%
+     Rows:      hits         Fec Targets       Matching input patterns
+  --------  --------      --------------        ----------------------
+  Row   1:     25411 (current_state == 'h4f6c6564496e697469616c697a65)_0                   { 0-0 0-1 }
+  Row   2:       193 (current_state == 'h4f6c6564496e697469616c697a65)_1                   { 10- 11- }
+  Row   3:        96         init_sclk_0                       { 10- }
+  Row   4:        97         init_sclk_1                       { 11- }
+  Row   5:     12704      example_sclk_0                       { 0-0 }
+  Row   6:     12707      example_sclk_1                       { 0-1 }
+
+------------------UDP Expression View (Short circuiting enabled)-------------------
+Line       105 Item    1 	assign DC = (current_state == "OledInitialize")   ? init_dc   : example_dc;
+Expression totals: 3 hits of 6 rows = 50.0%
+Truth Table:         (current_state == 'h4f6c6564496e697469616c697a65)
+                     |init_dc
+                     ||example_dc
+                hits |||((current_state == 'h4f6c6564496e697469616c697a65)? init_dc: example_dc)
+  Row   1:         1 10-0
+  Row   2:   ***0*** 11-1
+  Row   3:         E 1Z-Z
+  Row   4:        13 0-00
+  Row   5:        14 0-11
+  Row   6:         E 0-ZZ
+  Row   7:   ***0*** -000
+  Row   8:   ***0*** -111
+  unknown:         3 
+
+----------------Focused Expression View (Short circuiting enabled)-----------------
+Line       105 Item    1 	assign DC = (current_state == "OledInitialize")   ? init_dc   : example_dc;
+Expression totals: 5 hits of 6 rows = 83.3%
+     Rows:      hits         Fec Targets       Matching input patterns
+  --------  --------      --------------        ----------------------
+  Row   1:        27 (current_state == 'h4f6c6564496e697469616c697a65)_0                   { 0-0 0-1 }
+  Row   2:         1 (current_state == 'h4f6c6564496e697469616c697a65)_1                   { 10- 11- }
+  Row   3:         1           init_dc_0                       { 10- }
+  Row   4:   ***0***           init_dc_1                       { 11- }
+  Row   5:        13        example_dc_0                       { 0-0 }
+  Row   6:        14        example_dc_1                       { 0-1 }
+
+
+
+File: SpiCtrl.v
+Statement Coverage:
+    Enabled Coverage        Active      Hits % Covered
+    ----------------        ------      ---- ---------
+    Stmts                       25        24      96.0
+
+================================Statement Details================================
+
+Statement Coverage for file SpiCtrl.v --
+
+    1                                              `timescale 1ns / 1ps
+    2                                              //////////////////////////////////////////////////////////////////////////////////
+    3                                              // Company: Digilent Inc.
+    4                                              // Engineers: Ryan Kim
+    5                                              //				  Josh Sackos
+    6                                              // 
+    7                                              // Create Date:    16:29:53 06/12/2012 
+    8                                              // Module Name:    SpiCtrl 
+    9                                              // Project Name: 	 PmodOLEDCtrl
+    10                                             // Tool versions:  ISE 14.1
+    11                                             // Target Devices: Nexys3
+    12                                             // Description: Spi block that sends SPI data formatted SCLK active low with
+    13                                             //					 SDO changing on the falling edge
+    14                                             //
+    15                                             // Revision: 1.0 - SPI completed
+    16                                             // Revision 0.01 - File Created 
+    17                                             //
+    18                                             //////////////////////////////////////////////////////////////////////////////////
+    19                                             module SpiCtrl(
+    20                                                 CLK,
+    21                                                 RST,
+    22                                                 SPI_EN,
+    23                                                 SPI_DATA,
+    24                                                 CS,
+    25                                                 SDO,
+    26                                                 SCLK,
+    27                                                 SPI_FIN
+    28                                                 );
+    29                                             
+    30                                             	// ===========================================================================
+    31                                             	// 										Port Declarations
+    32                                             	// ===========================================================================
+    33                                                 input CLK;
+    34                                                 input RST;
+    35                                                 input SPI_EN;
+    36                                                 input [7:0] SPI_DATA;
+    37                                                 output CS;
+    38                                                 output SDO;
+    39                                                 output SCLK;
+    40                                                 output SPI_FIN;
+    41                                             
+    42                                             	// ===========================================================================
+    43                                             	// 							  Parameters, Regsiters, and Wires
+    44                                             	// ===========================================================================
+    45                                             	wire CS, SDO, SCLK, SPI_FIN;
+    46                                             
+    47                                             	reg [39:0] current_state = "Idle";		// Signal for state machine
+    48                                             	
+    49                                             	reg [7:0] shift_register = 8'h00;		// Shift register to shift out SPI_DATA saved when SPI_EN was set
+    50                                             	reg [3:0] shift_counter = 4'h0;			// Keeps track how many bits were sent
+    51                                             	wire clk_divided;						// Used as SCLK
+    52                                             	reg [4:0] counter = 5'b00000;				// Count clocks to be used to divide CLK
+    53                                             	reg temp_sdo = 1'b1;							// Tied to SDO
+    54                                             	
+    55                                             	reg falling = 1'b0;							// signal indicating that the clk has just fell
+    56                                             
+    57                                             	// ===========================================================================
+    58                                             	// 										Implementation
+    59                                             	// ===========================================================================
+    60                            1     414402     	assign clk_divided = ~counter[4];
+    61                                             	assign SCLK = clk_divided;
+    62                                             	assign SDO = temp_sdo;
+    63                                             	
+    64                            1      14403     	assign CS = (current_state == "Idle" && SPI_EN == 1'b0) ? 1'b1 : 1'b0;
+    65                            1      11202     	assign SPI_FIN = (current_state == "Done") ? 1'b1 : 1'b0;
+    66                                             	
+    67                                             	//  State Machine
+    68                            1    2000000     	always @(posedge CLK) begin
+    69                                             			if(RST == 1'b1) begin							// Synchronous RST
+    70                            1          8     				current_state <= "Idle";
+    71                                             			end
+    72                                             			else begin
+    73                                             			
+    74                                             				case(current_state)
+    75                                             
+    76                                             					// Wait for SPI_EN to go high
+    77                                             					"Idle" : begin
+    78                                             						if(SPI_EN == 1'b1) begin
+    79                            1       1600     							current_state <= "Send";
+    80                                             						end
+    81                                             					end
+    82                                             
+    83                                             					// Start sending bits, transition out when all bits are sent and SCLK is high
+    84                                             					"Send" : begin
+    85                                             						if(shift_counter == 4'h8 && falling == 1'b0) begin
+    86                            1       1600     							current_state <= "Hold1";
+    87                                             						end
+    88                                             					end
+    89                                             					
+    90                                             					// Hold CS low for a bit
+    91                                             					"Hold1" : begin
+    92                            1       1600     						current_state <= "Hold2";
+    93                                             					end
+    94                                             
+    95                                             					// Hold CS low for a bit
+    96                                             					"Hold2" : begin
+    97                            1       1600     						current_state <= "Hold3";
+    98                                             					end
+    99                                             
+    100                                            					// Hold CS low for a bit
+    101                                            					"Hold3" : begin
+    102                           1       1600     						current_state <= "Hold4";
+    103                                            					end
+    104                                            
+    105                                            					// Hold CS low for a bit
+    106                                            					"Hold4" : begin
+    107                           1       1600     						current_state <= "Done";
+    108                                            					end
+    109                                            
+    110                                            					// Finish SPI transimission wait for SPI_EN to go low
+    111                                            					"Done" : begin
+    112                                            						if(SPI_EN == 1'b0) begin
+    113                           1       1600     							current_state <= "Idle";
+    114                                            						end
+    115                                            					end
+    116                                            
+    117                           1    ***0***     					default : current_state <= "Idle";
+    118                                            
+    119                                            				endcase
+    120                                            			end
+    121                                            	end
+    122                                            	//  End of State Machine
+    123                                            
+    124                                            	
+    125                                            	//  Clock Divider
+    126                           1    2000000     	always @(posedge CLK) begin
+    127                                            			//  start clock counter when in send state
+    128                                            			if(current_state == "Send") begin
+    129                           1     412800     				counter <= counter + 1'b1;
+    130                                            			end
+    131                                            			//  reset clock counter when not in send state
+    132                                            			else begin
+    133                           1    1587200     				counter <= 5'b00000;
+    134                                            			end
+    135                                            	end
+    136                                            	//  End Clock Divider
+    137                                            	
+    138                                            	
+    139                                            	//  SPI_SEND_BYTE,  sends SPI data formatted SCLK active low with SDO changing on the falling edge
+    140                           1    2000000     	always @(posedge CLK) begin
+    141                                            			if(current_state == "Idle") begin
+    142                           1    1576000     					shift_counter <= 4'h0;
+    143                                            					// keeps placing SPI_DATA into shift_register so that when state goes to send it has the latest SPI_DATA
+    144                           1    1576000     					shift_register <= SPI_DATA;
+    145                           1    1576000     					temp_sdo <= 1'b1;
+    146                                            			end
+    147                                            			else if(current_state == "Send") begin
+    148                                            					//  if on the falling edge of Clk_divided
+    149                                            					if(clk_divided == 1'b0 && falling == 1'b0) begin
+    150                                            							//  Indicate that it is passed the falling edge
+    151                           1      12800     							falling <= 1'b1;
+    152                                            							// send out the MSB
+    153                           1      12800     							temp_sdo <= shift_register[7];
+    154                                            							//  Shift through SPI_DATA
+    155                           1      12800     							shift_register <= {shift_register[6:0],1'b0};
+    156                                            							//  Keep track of what bit it is on
+    157                           1      12800     							shift_counter <= shift_counter + 1'b1;
+    158                                            					end
+    159                                            					//  on SCLK high reset the falling flag
+    160                                            					else if(clk_divided == 1'b1) begin
+    161                           1     208000     						falling <= 1'b0;
+    162                                            					end
+    163                                            			end
+    164                                            	end
+    165                                            
+    166                                            endmodule
+
+Branch Coverage:
+    Enabled Coverage        Active      Hits % Covered
+    ----------------        ------      ---- ---------
+    Branches                    26        25      96.1
+
+================================Branch Details================================
+
+Branch Coverage for file SpiCtrl.v --
+
+------------------------------------IF Branch------------------------------------
+    69                                 2000000     Count coming in to IF
+    69                            1          8     			if(RST == 1'b1) begin							// Synchronous RST
+    72                            1    1999992     			else begin
+Branch totals: 2 hits of 2 branches = 100.0%
+
+------------------------------------CASE Branch------------------------------------
+    74                                 1999992     Count coming in to CASE
+    77                            1    1575992     					"Idle" : begin
+    84                            1     412800     					"Send" : begin
+    91                            1       1600     					"Hold1" : begin
+    96                            1       1600     					"Hold2" : begin
+    101                           1       1600     					"Hold3" : begin
+    106                           1       1600     					"Hold4" : begin
+    111                           1       4800     					"Done" : begin
+    117                           1    ***0***     					default : current_state <= "Idle";
+Branch totals: 7 hits of 8 branches = 87.5%
+
+------------------------------------IF Branch------------------------------------
+    78                                 1575992     Count coming in to IF
+    78                            1       1600     						if(SPI_EN == 1'b1) begin
+                                       1574392     All False Count
+Branch totals: 2 hits of 2 branches = 100.0%
+
+------------------------------------IF Branch------------------------------------
+    85                                  412800     Count coming in to IF
+    85                            1       1600     						if(shift_counter == 4'h8 && falling == 1'b0) begin
+                                        411200     All False Count
+Branch totals: 2 hits of 2 branches = 100.0%
+
+------------------------------------IF Branch------------------------------------
+    112                                   4800     Count coming in to IF
+    112                           1       1600     						if(SPI_EN == 1'b0) begin
+                                          3200     All False Count
+Branch totals: 2 hits of 2 branches = 100.0%
+
+------------------------------------IF Branch------------------------------------
+    128                                2000000     Count coming in to IF
+    128                           1     412800     			if(current_state == "Send") begin
+    132                           1    1587200     			else begin
+Branch totals: 2 hits of 2 branches = 100.0%
+
+------------------------------------IF Branch------------------------------------
+    141                                2000000     Count coming in to IF
+    141                           1    1576000     			if(current_state == "Idle") begin
+    147                           1     424000     			else if(current_state == "Send") begin
+Branch totals: 2 hits of 2 branches = 100.0%
+
+------------------------------------IF Branch------------------------------------
+    147                                 424000     Count coming in to IF
+    147                           2     412800     			else if(current_state == "Send") begin
+                                         11200     All False Count
+Branch totals: 2 hits of 2 branches = 100.0%
+
+------------------------------------IF Branch------------------------------------
+    149                                 412800     Count coming in to IF
+    149                           1      12800     					if(clk_divided == 1'b0 && falling == 1'b0) begin
+    160                           1     400000     					else if(clk_divided == 1'b1) begin
+Branch totals: 2 hits of 2 branches = 100.0%
+
+------------------------------------IF Branch------------------------------------
+    160                                 400000     Count coming in to IF
+    160                           2     208000     					else if(clk_divided == 1'b1) begin
+                                        192000     All False Count
+Branch totals: 2 hits of 2 branches = 100.0%
+
+
+Condition Coverage:
+    Enabled Coverage        Active      Hits % Covered
+    ----------------        ------      ---- ---------
+    Conditions                   6         6     100.0
+    Fec Conditions               8         8     100.0
+
+================================Condition Details================================
+
+Condition Coverage for file SpiCtrl.v --
+
+-------------------UDP Condition View (Short circuiting enabled)--------------------
+Line       85 Item    1 						if(shift_counter == 4'h8 && falling == 1'b0) begin
+Condition totals: 3 hits of 3 rows = 100.0%
+Truth Table:         (shift_counter == 8)
+                     |falling
+                hits ||((shift_counter == 8) && (falling == 1'b0))
+  Row   1:    385600 0-0
+  Row   2:     25600 -10
+  Row   3:      1600 101
+  unknown:         0 
+
+----------------Focused Condition View (Short circuiting enabled)-------------------
+Line       85 Item    1 						if(shift_counter == 4'h8 && falling == 1'b0) begin
+Condition totals: 4 hits of 4 rows = 100.0%
+     Rows:      hits         Fec Targets       Matching input patterns
+  --------  --------      --------------        ----------------------
+  Row   1:    385600 (shift_counter == 8)_0                        { 0- }
+  Row   2:      1600 (shift_counter == 8)_1                        { 10 }
+  Row   3:      1600           falling_0                        { 10 }
+  Row   4:     25600           falling_1                        { 11 }
+
+-------------------UDP Condition View (Short circuiting enabled)--------------------
+Line       149 Item    1 					if(clk_divided == 1'b0 && falling == 1'b0) begin
+Condition totals: 3 hits of 3 rows = 100.0%
+Truth Table:         clk_divided
+                     |falling
+                hits ||((clk_divided == 1'b0) && (falling == 1'b0))
+  Row   1:    208000 1-0
+  Row   2:    192000 -10
+  Row   3:     12800 001
+  unknown:         0 
+
+----------------Focused Condition View (Short circuiting enabled)-------------------
+Line       149 Item    1 					if(clk_divided == 1'b0 && falling == 1'b0) begin
+Condition totals: 4 hits of 4 rows = 100.0%
+     Rows:      hits         Fec Targets       Matching input patterns
+  --------  --------      --------------        ----------------------
+  Row   1:     12800       clk_divided_0                        { 00 }
+  Row   2:    208000       clk_divided_1                        { 1- }
+  Row   3:     12800           falling_0                        { 00 }
+  Row   4:    192000           falling_1                        { 01 }
+
+
+Expression Coverage:
+    Enabled Coverage        Active      Hits % Covered
+    ----------------        ------      ---- ---------
+    Expressions                  3         3     100.0
+    Fec Expressions              4         4     100.0
+
+================================Expression Details================================
+
+Expression Coverage for file SpiCtrl.v --
+
+------------------UDP Expression View (Short circuiting enabled)-------------------
+Line       64 Item    1 	assign CS = (current_state == "Idle" && SPI_EN == 1'b0) ? 1'b1 : 1'b0;
+Expression totals: 3 hits of 3 rows = 100.0%
+Truth Table:         (current_state == 'h0049646c65)
+                     |SPI_EN
+                hits ||((current_state == 'h0049646c65) & (SPI_EN == 1'b0))
+  Row   1:     11200 0-0
+  Row   2:      1600 -10
+  Row   3:      1601 101
+  unknown:         2 
+
+----------------Focused Expression View (Short circuiting enabled)-----------------
+Line       64 Item    1 	assign CS = (current_state == "Idle" && SPI_EN == 1'b0) ? 1'b1 : 1'b0;
+Expression totals: 4 hits of 4 rows = 100.0%
+     Rows:      hits         Fec Targets       Matching input patterns
+  --------  --------      --------------        ----------------------
+  Row   1:     11200 (current_state == 'h0049646c65)_0                        { 0- }
+  Row   2:      1601 (current_state == 'h0049646c65)_1                        { 10 }
+  Row   3:      1601            SPI_EN_0                        { 10 }
+  Row   4:      1600            SPI_EN_1                        { 11 }
+
+
+
+File: charLib.v
+Statement Coverage:
+    Enabled Coverage        Active      Hits % Covered
+    ----------------        ------      ---- ---------
+    Stmts                        3         3     100.0
+
+================================Statement Details================================
+
+Statement Coverage for file charLib.v --
+
+    1                                              // 55:131 Project 2
+    2                                              
+    3                                              `timescale 1ns/100ps
+    4                                              
+    5                                              module charLib (clka, addra, douta);
+    6                                              
+    7                                                input clka;
+    8                                                input [10:0] addra;
+    9                                                output [7:0] douta;
+    10                                               reg [7:0] douta;
+    11                                               reg [7:0] ram_array [1023:0];
+    12                                               	
+    13                            1    1000000       always @(posedge clka)
+    14                                               begin
+    15                            1    1000000         #2 douta <= ram_array[addra];
+    15                            2    1000000     
+    16                                               end
+    17                                             endmodule
+
+Branch Coverage:
+    Enabled Coverage        Active      Hits % Covered
+    ----------------        ------      ---- ---------
+    Branches                     0         0     100.0
+Condition Coverage:
+    Enabled Coverage        Active      Hits % Covered
+    ----------------        ------      ---- ---------
+    Conditions                   0         0     100.0
+    Fec Conditions               0         0     100.0
+Expression Coverage:
+    Enabled Coverage        Active      Hits % Covered
+    ----------------        ------      ---- ---------
+    Expressions                  0         0     100.0
+    Fec Expressions              0         0     100.0
+

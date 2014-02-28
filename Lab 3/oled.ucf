@@ -1,0 +1,53 @@
+# clock pin for Atlys rev C board
+# Bank = 1, Pin name = IO_L42P_GCLK7_M1UDM, Type = GCLK, Sch name = GCLK
+NET "CLK" IOSTANDARD = LVCMOS33;
+NET "CLK" LOC = L15;
+NET "CLK" TNM_NET = "sys_clk_pin";
+TIMESPEC TS_sys_clk_pin = PERIOD "sys_clk_pin" 100000 KHz;
+
+# SPI Pins to Pmod connector
+#Bank = 2, Sch name = JA1
+NET "CS" IOSTANDARD = LVCMOS33;
+NET "CS" LOC = T3;
+#Bank = 2, Sch name = JA2  
+NET "SDIN" IOSTANDARD = LVCMOS33;
+NET "SDIN" LOC = R3;
+#Bank = 2, Sch name = JA4
+NET "SCLK" IOSTANDARD = LVCMOS33;
+NET "SCLK" LOC = N5;
+#Bank = 2, Sch name = JA7
+NET "DC" IOSTANDARD = LVCMOS33;
+NET "DC" LOC = V9;
+#Bank = 2, Sch name = JA8
+NET "RES" IOSTANDARD = LVCMOS33;
+NET "RES" LOC = T9;
+#Bank = 2, Sch name = JA9
+NET "VBAT" IOSTANDARD = LVCMOS33;
+NET "VBAT" LOC = V4;
+#Bank = 2, Sch name = JA10
+NET "VDD" IOSTANDARD = LVCMOS33;
+NET "VDD" LOC = T4;
+#Bank = 0, Sch name = BTNS
+NET "RST" IOSTANDARD = LVCMOS33;
+NET "RST" LOC = T15;
+
+# PlanAhead Generated physical constraints 
+
+NET "LD0" LOC = U18;
+
+# PlanAhead Generated IO constraints 
+
+NET "LD0" IOSTANDARD = LVCMOS33;
+
+# PlanAhead Generated physical constraints 
+
+# NET "BTNL" LOC = P4;
+
+# PlanAhead Generated IO constraints 
+
+# NET "BTNL" IOSTANDARD = LVCMOS18;
+# NET "BTNR" IOSTANDARD = LVCMOS18;
+
+# PlanAhead Generated physical constraints 
+
+# NET "BTNR" LOC = F6;
